@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avoidance</title>
+    <script src="../src/phaser_v3.15.0.js"></script>
+    <script src="../assets/avoid_hitboxes.json"></script>
+    <script src="../assets/avoid_sprites.json"></script>
+</head>
+<body>
+    <script>
+     class Point {
+        constructor(x,y){
+            this.x = x;
+            this.y = y;
+        }
+    }
+    class J_Sprite extends Phaser.Physics.Matter.World {
+        constructor(object_scene, name_sprite){
+            super({
+                scene:object_scene
+            });
+            this.scene = object_scene;
+            this.name_it = name_sprite;
+            this.sprite_j = {};
+            this.world = object_scene.matter.world;
+            this.x = game.config.width*0.5;
+            this.y = game.config.height*0.5-100;
+            this.texture='sprites';
+            this.frame= name_sprite.toString()+'.png';
+            this.options={shape: hitboxes[name_sprite]};
+        }
+        addMe(num){
+            for(var i=num; i > 0; i--){
+                var name_it = this.name_it+'_'+i.toString()
+                this.sprite_j[name_it] = this.scene.matter.add.sprite(this.x,this.y,this.texture,this.frame,this.options);
+                this.sprite_j[name_it].name = name_it
+            }            
+            return this.sprite_j;
+        }
+    }
+
+
+    class SceneMenue extends Phaser.Scene {
+        constructor(){
+            super({ key: 'sceneMenue' });
+        }
+        preload (){
+            console.log('menues are loading')
+        }
+        create ()
+        {
+            console.log("menues were loaded")
+            this.scene.start('sceneGameOn');
+        }
+    }
+
+    class SceneGameOn extends Phaser.Scene {
+        constructor(){
+            super({ key: 'sceneGameOn' });
+        }
+        preload() {
+            console.log('game is loading')
+                // Load sprite sheet generated with TexturePacker
+                this.load.atlas('sprites', '../assets/avoid_sprites.png', '../assets/avoid_sprites.json');
+                // Load body shapes from JSON file generated using PhysicsEditor
+                this.load.json('hitboxes', '../assets/avoid_hitboxes.json');
+            }
+            create() {
+                console.log("game has loaded")
+                var scene_obj = this
+                hitboxes = this.cache.json.get('hitboxes');
+                var keyNames = Object.keys(hitboxes);
+                console.log(keyNames)
+                this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
+
+                blues = new J_Sprite(scene_obj, 'blue').addMe(4);
+                greens = new J_Sprite(scene_obj, 'green').addMe(20);
+                reds = new J_Sprite(scene_obj, 'red').addMe(2);
+                
+                reds.red_1.x = game.config.width*0.5;
+                reds.red_1.y = game.config.height*0.5;
+                reds.red_1.target = new Point(reds.red_1.x,reds.red_1.y);
+                graphicsEffectOne_pt_Init(scene_obj, reds.red_1);
+
+                reds.red_2.x = game.config.width -25
+                reds.red_2.y = 25
+
+                var count = 1
+                for (var sprite in blues) {
+                    blues[sprite].y += 200;
+                    blues[sprite].x = 100*count;
+                    count++;
+                }
+                var count = 1
+                for (var sprite in greens) {
+                    greens[sprite].y -= 100;
+                    greens[sprite].x = 10*count;
+                    count++;
+                }
+                for (var sprite in blues){
+                    newTarget(blues[sprite])    
+                }
+
+                reds.red_2.setInteractive();
+                reds.red_2.on('pointerup', function (event) {
+                    this.input.manager.enabled = true;
+                    this.scene.start('sceneGameOver');
+                }, this);
+            }
+            update(time, delta){
+                var scene_obj = this
+                mouseTarget(scene_obj, reds.red_1);
+                moveToMouse(reds.red_1, delta)
+                for (var sprite in blues) {
+                    updateMe(blues[sprite],delta)
+                }
+                graphicsEffectOne_pt_Update(reds.red_1, delta)
+            }
+        }
+        function mouseTarget(scene_obj, sprite){
+            scene_obj.input.manager.enabled = true;
+            scene_obj.input.once('pointerdown', function (event) {
+                sprite.target = new Point(game.input.mousePointer.x,game.input.mousePointer.y)
+            }, this);    
+        }
+        function moveToMouse(sprite, delta){
+            //Point the object at its target
+            var dx =  sprite.target.x - sprite.x;
+            var dy = sprite.target.y - sprite.y;
+            var angle = Math.atan2(dy, dx);
+            sprite.rotation = angle
+            //move the object in the direction its facing
+            //calculate the distance to the target
+            var hyp = Math.sqrt((dx*dx)+(dy*dy))
+            //if the hyp is less then 5 pixels pick a new target
+            if (hyp > 5){
+                sprite.x = sprite.x+Math.cos(sprite.rotation)*delta/8
+                sprite.y = sprite.y+Math.sin(sprite.rotation)*delta/8
+            }
+            
+        };
+        //////
+        //EFFECT ONE START
+        //////
+        var sprite_circle = new Phaser.Geom.Circle(0,0,3);
+        var graphics_store = {};
+        var effect_one_count = 50;
+        var outer_circle_radius = 100;
+        
+        function graphicsEffectOne_pt_Init(scene_obj, sprite){
+            for(var i = effect_one_count; i > 0; i--){
+                var name_it = 'particle_'+i.toString();
+                graphics_store[name_it] = scene_obj.add.graphics({ fillStyle: { color: 0xff0000 } });
+                graphics_store[name_it].fillCircleShape(sprite_circle);
+                graphics_store[name_it].x = sprite.x
+                graphics_store[name_it].y = sprite.y
+                scene_obj.children.bringToTop(sprite);
+                graphicsEffectOne_pt_Target(sprite, graphics_store[name_it])
+                //Point the object at random point on the outer circle
+                var dx = graphics_store[name_it].target.x - graphics_store[name_it].x;
+                var dy = graphics_store[name_it].target.y - graphics_store[name_it].y;
+                var angle = Math.atan2(dy, dx);
+                graphics_store[name_it].rotation = angle
+                //calculate the distance to the target
+                var hyp = Math.sqrt((dx*dx)+(dy*dy))
+                graphics_store[name_it].x = graphics_store[name_it].x+Math.cos(graphics_store[name_it].rotation)*(outer_circle_radius*Math.random())
+                graphics_store[name_it].y = graphics_store[name_it].y+Math.sin(graphics_store[name_it].rotation)*(outer_circle_radius*Math.random())
+            }
+        }
+        function graphicsEffectOne_pt_Update(sprite, delta){
+            for(var particle in graphics_store){
+                //Point the particle at random point on the outer circle
+                var dx = graphics_store[particle].target.x - graphics_store[particle].x;
+                var dy = graphics_store[particle].target.y - graphics_store[particle].y;
+                var angle = Math.atan2(dy, dx);
+                graphics_store[particle].rotation = angle
+                //calculate the distance to the target
+                var hyp = Math.sqrt((dx*dx)+(dy*dy))
+                //if the hyp is less then 5 pixels pick a new target
+                if (hyp < 5){
+                    graphics_store[particle].x = sprite.x;
+                    graphics_store[particle].y = sprite.y;
+                    graphicsEffectOne_pt_Target(sprite, graphics_store[particle])
+                }else{//move the object in the direction its facing
+                    var speed = 5+Math.random()*8
+                    graphics_store[particle].x = graphics_store[particle].x+Math.cos(graphics_store[particle].rotation)*delta/speed
+                    graphics_store[particle].y = graphics_store[particle].y+Math.sin(graphics_store[particle].rotation)*delta/speed
+                } 
+            }
+        }
+        function graphicsEffectOne_pt_Target(sprite, particle){
+            var random_angle = Math.random()*Math.PI*2;
+            var outer_circle_x = sprite.x + Math.cos(random_angle)*outer_circle_radius;
+            var outer_circle_y = sprite.y + Math.sin(random_angle)*outer_circle_radius;
+            var point = new Point(outer_circle_x, outer_circle_y);
+            particle.target = point;
+        }  
+        //////
+        //EFFECT ONE END
+        //////
+
+        class SceneGameOver extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneGameOver' });
+            }
+            preload(){
+            }
+            create(){
+                var scene_obj = this;
+                reds = new J_Sprite(scene_obj, 'red').addMe(1);
+                reds.red_1.x = 25
+                reds.red_1.y = 25
+                reds.red_1.setInteractive();
+                reds.red_1.on('pointerup', function (event) {
+                    this.input.manager.enabled = true;
+                    this.scene.start('sceneGameOn');
+                }, this);
+            }
+        }
+//var hitboxes = {};
+var reds, blues, greens;
+var config = {
+            type: Phaser.AUTO,
+            width: 500,
+            height: 500,
+            parent: 'game',
+            scene: [ SceneMenue, SceneGameOn, SceneGameOver ],
+            physics: {
+                default: "matter",
+                matter: {
+                   debug: true
+               }
+           }
+       };
+
+var game = new Phaser.Game(config);
+
+function newTarget(sprite){
+        sprite.target = new Point(Math.random()*500, Math.random()*500);
+    }; 
+function updateMe(sprite, delta){
+            //Point the object at its target
+            var dx = sprite.target.x - sprite.x;
+            var dy = sprite.target.y - sprite.y;
+            var angle = Math.atan2(dy, dx);
+            sprite.rotation = angle
+            //move the object in the direction its facing
+            sprite.x = sprite.x+Math.cos(sprite.rotation)*delta/8
+            sprite.y = sprite.y+Math.sin(sprite.rotation)*delta/8
+            //calculate the distance to the target
+            var hyp = Math.sqrt((dx*dx)+(dy*dy))
+            //if the hyp is less then 5 pixels pick a new target
+            if (hyp < 5){
+                newTarget(sprite)
+            }
+        }
+
+        
+    </script>
+</body>
+</html>

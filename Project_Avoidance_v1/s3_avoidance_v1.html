@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avoidance</title>
+    <script src="phaser.js"></script>
+    <script src=""></script>
+</head>
+<body>
+    <script>
+       
+        
+        class SceneMenue extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneMenue' });
+            }
+            preload (){
+                console.log('menues are loading')
+            }
+            create ()
+            {
+                console.log("menues were loaded")
+                this.scene.start('sceneGameOn');
+            }
+        }
+
+        class SceneGameOn extends Phaser.Scene {
+            constructor(){
+            super({ key: 'sceneGameOn' });
+                }
+            preload() {
+                console.log('game is loading')
+                // Load sprite sheet generated with TexturePacker
+                this.load.atlas('sprites', 'avoid_sprites.png', 'avoid_sprites.json');
+                // Load body shapes from JSON file generated using PhysicsEditor
+                this.load.json('hitboxes', 'avoid_hitboxes.json');
+                }
+            create() {
+                console.log("game has loaded")
+                var hitboxes = this.cache.json.get('hitboxes');
+                var keyNames = Object.keys(hitboxes);
+                console.log(keyNames)
+                this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
+                this.matter.add.sprite(game.config.width*0.5, game.config.height*0.5, 'sprites', 'red.png', {shape: hitboxes.red});
+                }
+            update(){
+                }
+
+            }
+        class SceneGameOver extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneGameOver' });
+                }
+            preload(){
+                }
+            create(){
+                this.input.once('pointerup', function (event) {
+                    this.input.manager.enabled = false;
+                    this.scene.start('sceneA');
+                    }, this);
+                }
+            }
+        
+        var config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 400,
+            parent: 'game',
+            scene: [ SceneMenue, SceneGameOn, SceneGameOver ],
+            physics: {
+                default: "matter",
+                matter: {
+                     //debug: true
+                }
+            }
+        };
+        
+        var game = new Phaser.Game(config);
+        var hitboxes;
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Avoidance</title>
+  <script src="phaser.js"></script> 
+  <script src="Additional_Fun_vLatest.js"></script>
+</head>
+<body onload="init()">
+  <script>
+    var config, game;
+    var WIDTH = 1000;
+    var HEIGHT = 500;
+    function init(){
+      config = {
+        type: Phaser.CANVAS,
+        width: WIDTH,
+        height: HEIGHT,
+        parent: 'game',
+        scene: [ SceneMenue, SceneGameOn, SceneGameOver ],
+        physics: {
+          default: "matter",
+          matter: {
+           debug: false
+         }
+       }
+       ,transparent: true
+     };
+     game = new Phaser.Game(config);
+   }
+ </script>
+ <script src="SceneGameMenue.js"></script>
+ <script src="SceneGameOn.js"></script>
+ <script src="SceneGameOver.js"></script>
+</body>
+</html>

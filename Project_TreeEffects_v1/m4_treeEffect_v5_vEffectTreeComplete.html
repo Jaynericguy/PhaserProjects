@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avoidance</title>
+    <script src="phaser.js"></script>
+    <script src="avoid_hitboxes.json"></script>
+    <script src="avoid_sprites.json"></script>
+</head>
+<body>
+    <script>
+       
+        class SceneGameOn extends Phaser.Scene {
+            constructor(){
+            super({ key: 'sceneGameOn' });
+                }
+            preload() {
+                console.log('game is loading')
+                // Load sprite sheet generated with TexturePacker
+                this.load.atlas('sprites', 'avoid_sprites.png', 'avoid_sprites.json');
+                // Load body shapes from JSON file generated using PhysicsEditor
+                this.load.json('hitboxes', 'avoid_hitboxes.json');
+                }
+            create() {
+                console.log("game has loaded")
+                var scene_obj = this;
+                hitboxes = this.cache.json.get('hitboxes');
+                var keyNames = Object.keys(hitboxes);
+                console.log(keyNames)
+                this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
+                reds = new J_Sprite(scene_obj, 'red').addMe(2);
+                tree = new TreeGenerator(scene_obj, reds.red_1)
+                reds.red_1.x = game.config.width*0.5;
+                reds.red_1.y = game.config.height*0.5;
+                reds.red_1.target = new Point(reds.red_1.x,reds.red_1.y);
+                graphicsEffectOne_pt_Init(scene_obj, reds.red_1);
+                reds.red_2.x = game.config.width -25;
+                reds.red_2.y = 25;
+                reds.red_2.setInteractive();
+                reds.red_2.on('pointerup', function (event) {
+                    this.input.manager.enabled = true;
+                    this.scene.start('sceneGameOver');
+                        }, this);
+                tree.start();
+                setTimeout(function(){tree.stop()},2000,tree)
+                }
+            update(time, delta){
+                var scene_obj = this;
+                mouseTarget(scene_obj, reds.red_1);
+                moveToMouse(reds.red_1, delta);
+                graphicsEffectOne_pt_Update(reds.red_1, delta);
+                tree.fadeJ(reds.red_1);
+                if(tree.new_tree){
+                    tree = new TreeGenerator(scene_obj, reds.red_1);
+                    tree.start();
+                    setTimeout(function(){tree.stop()},2000,tree)
+                }}
+            }
+        function mouseTarget(scene_obj, sprite){
+            scene_obj.input.manager.enabled = true;
+            scene_obj.input.once('pointerdown', function (event) {
+                    sprite.target = new Point(game.input.mousePointer.x,game.input.mousePointer.y)
+                    }, this);    
+        }
+        function moveToMouse(sprite, delta){
+            //Point the object at its target
+            var dx =  sprite.target.x - sprite.x;
+            var dy = sprite.target.y - sprite.y;
+            var angle = Math.atan2(dy, dx);
+            sprite.rotation = angle
+            //move the object in the direction its facing
+            //calculate the distance to the target
+            var hyp = Math.sqrt((dx*dx)+(dy*dy))
+            //if the hyp is less then 5 pixels pick a new target
+            if (hyp > 5){
+                sprite.x = sprite.x+Math.cos(sprite.rotation)*delta/8
+                sprite.y = sprite.y+Math.sin(sprite.rotation)*delta/8
+            }
+            
+        };
+        
+    //////
+    //EFFECT TWO START
+    //////
+     class TreeGenerator {
+    constructor(scene_obj, sprite_obj){
+        this.loss = 0.03; // Width loss per cycle
+        this.minSleep= 10; // Min sleep time (For the animation)
+        this.branchLoss= 0.8; // % width maintained for branches
+        this.mainLoss= 0.8; // % width maintained after branching
+        this.speed= 0.3; // Movement speed
+        this.newBranch= 0.8; // Chance of not starting a new branch
+        this.colorful= false; // Use colors for new trees
+        this.fastMode= true; // Fast growth mode
+        this.fadeOut= true; // Fade slowly to black
+        this.fadeAmount= 0.05; // How much per iteration
+        this.autoSpawn= true; // Automatically create trees
+        this.spawnInterval= 250; // Spawn interval in ms
+        this.fadeInterval= 250; // Fade interval in ms
+        this.initialWidth= 10; // Initial branch width
+        this.indicateNewBranch= false; // Display a visual indicator when a new branch is born
+        this.fitScreen= false; // Resize canvas to fit screen,
+        this.treeColor= 0xA54D4D;
+        this.bgColor= [0, 0, 0];
+        // Initialize the canvas
+        this.canvas = scene_obj
+        this.sprite = sprite_obj 
+        this.canvas.WIDTH = 500
+        this.canvas.HEIGHT = 500
+        this.canvas.ctx = scene_obj.add.graphics()
+        // canvasMinX: canvas.offset().left,
+        // canvasMaxX: canvas.canvasMinX + canvas.WIDTH,
+        // canvasMinY: canvas.offset().top,
+        // canvasMaxY: canvas.canvasMinY + canvas.HEIGHT
+        // Generation intervals
+        this.intervals = {
+            generation: null
+            //,fading: null
+        }
+        this.initial_x = sprite_obj.x
+        this.new_tree = false;
+    }
+    start(){
+        var context_this_tree = this;
+        context_this_tree.canvas.children.bringToTop(context_this_tree.sprite);
+    // Clear intervals
+        this.stop();
+        // Check autoSpawn
+        if (this.autoSpawn) {
+            context_this_tree.branch(context_this_tree.sprite.target.x, context_this_tree.canvas.HEIGHT, 0, -3, 10, 0, context_this_tree.treeColor);
+            
+            context_this_tree.intervals.generation = 
+                setInterval(function () {
+                context_this_tree.branch(
+                    context_this_tree.sprite.target.x,
+                    context_this_tree.canvas.HEIGHT,
+                    0,
+                    -Math.random() * 3,
+                    10 * Math.random(), 30,
+                    0
+                );
+            }, this.spawnInterval)
+        }  
+        //if(this.fadeOut){context_this_tree.intervals.fading = }
+
+    }
+    stop(){
+        var context_this_tree = this;
+        clearInterval(context_this_tree.intervals.generation);
+        clearInterval(context_this_tree.intervals.fading);
+        
+    }
+
+    fadeJ(sprite){
+        var context_this_tree = this;
+        var dx = sprite.target.x - sprite.x;
+        var d2x = Math.abs(context_this_tree.initial_x - sprite.x);
+        var dy = sprite.target.y - sprite.y;
+        var distance = Math.sqrt(dx*dx +dy*dy)
+        var time = distance/10 //where sprite_obj.speed=10
+        if(distance<5) distance = 1000
+        var tree_alpha_interval = 1/(distance*2)
+        //console.log("distance-time-alphaInterval:  "+distance.toString()+"--"+time.toString()+"--"+tree_alpha_interval.toString())
+        if(d2x>50) tree.canvas.ctx.alpha -= tree_alpha_interval
+            else tree.canvas.ctx.alpha += tree_alpha_interval
+        if(tree.canvas.ctx.alpha<=0) context_this_tree.new_tree = true;
+    }
+
+
+
+    branch(x, y, dx, dy, w, growthRate, lifetime, branchColor){
+        var context_this_tree = this;
+        context_this_tree.canvas.ctx.lineStyle(w - lifetime * context_this_tree.loss, context_this_tree.treeColor);
+        context_this_tree.canvas.ctx.beginPath();
+        context_this_tree.canvas.ctx.moveTo(x, y);
+        if (context_this_tree.fastMode) growthRate *= 0.5;
+        // Calculate new coords
+        x = x + dx;
+        y = y + dy;
+        // Change dir
+        dx = dx + Math.sin(Math.random() + lifetime) * context_this_tree.speed;
+        dy = dy + Math.cos(Math.random() + lifetime) * context_this_tree.speed;
+        // Check if branches are getting too low
+        if (w < 6 && y > context_this_tree.canvas.HEIGHT - Math.random() * (0.3 * context_this_tree.canvas.HEIGHT)) w = w * 0.8;
+        // Draw the next segment of the branch
+        context_this_tree.canvas.ctx.strokeStyle = context_this_tree.treeColor;
+        context_this_tree.canvas.ctx.lineTo(x, y);
+        context_this_tree.canvas.ctx.strokePath();
+        // Generate new branches
+        // they should spawn after a certain lifetime has been met, although depending on the width
+        if (lifetime > 5 * w + Math.random() * 100 && Math.random() > context_this_tree.newBranch) {
+            setTimeout(function () {
+                // Indicate the birth of a new branch
+                if (context_this_tree.indicateNewBranch) {
+                    circle(context_this_tree.canvas, x, y, w, context_this_tree.treeColor);
+                }
+                context_this_tree.branch(x, y, 2 * Math.sin(Math.random() + lifetime), 2 * Math.cos(Math.random() + lifetime), (w - lifetime * context_this_tree.loss) * context_this_tree.branchLoss, growthRate + Math.random() * 100, 0, branchColor);
+                // When it branches, it looses a bit of width
+                w *= context_this_tree.mainLoss;
+            }, 2 * growthRate * Math.random() + context_this_tree.minSleep);
+        }
+        // Continue the branch
+        if (w - lifetime * context_this_tree.loss >= 1) setTimeout(function () {
+            context_this_tree.branch(x, y, dx, dy, w, growthRate, ++lifetime, branchColor);
+        }, growthRate);
+    }
+ }
+    // -------------------------------//
+    //       Internal functions       //
+    // -------------------------------//
+
+    // Clear the canvas
+    function clear(tree_obj) {
+        tree_obj.canvas.ctx.clearRect(0, 0 - HEIGHT / 2, WIDTH, HEIGHT);
+    }
+
+    /**
+     * Draw a circle
+     * @param  {int}    x     Center x coordinate
+     * @param  {int}    y     Center y coordinate
+     * @param  {int}    rad   Radius
+     * @param  {String} color HTML color
+     * @return {void}
+     */
+    function circle(scene_obj, x, y, rad, color) {
+        // Circulo
+        scene_obj.canvas.ctx.lineWidth = 1;
+        scene_obj.canvas.ctx.strokeStyle = color;
+        scene_obj.canvas.ctx.beginPath();
+        scene_obj.canvas.ctx.arc(x, y, rad, 0, Math.PI * 2, true);
+        scene_obj.canvas.ctx.closePath();
+        scene_obj.canvas.ctx.strokePath();
+    }    
+
+    //////
+    //EFFECT TWO END
+    //////
+
+
+    class SceneGameOver extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneGameOver' });
+                }
+            preload(){
+                }
+            create(){
+                var scene_obj = this;
+                reds = new J_Sprite(scene_obj, 'red').addMe(1);
+                reds.red_1.x = 25
+                reds.red_1.y = 25
+                reds.red_1.setInteractive();
+                reds.red_1.on('pointerup', function (event) {
+                    this.input.manager.enabled = true;
+                    this.scene.start('sceneGameOn');
+                        }, this);
+                }
+            } 
+    
+
+    function newTarget(sprite){
+        sprite.target = new Point(Math.random()*500, Math.random()*500);
+    }; 
+    function updateMe(sprite, delta){
+        //Point the object at its target
+        var dx = sprite.target.x - sprite.x;
+        var dy = sprite.target.y - sprite.y;
+        var angle = Math.atan2(dy, dx);
+        sprite.rotation = angle
+        //move the object in the direction its facing
+        sprite.x = sprite.x+Math.cos(sprite.rotation)*delta/8
+        sprite.y = sprite.y+Math.sin(sprite.rotation)*delta/8
+        //calculate the distance to the target
+        var hyp = Math.sqrt((dx*dx)+(dy*dy))
+        //if the hyp is less then 5 pixels pick a new target
+        if (hyp < 5){
+            newTarget(sprite)
+        }
+    }
+    //////
+    //EFFECT ONE START
+    //////
+    var sprite_circle = new Phaser.Geom.Circle(0,0,3);
+    var graphics_store = {};
+    var effect_one_count = 50;
+    var outer_circle_radius = 100;
+    
+    function graphicsEffectOne_pt_Init(scene_obj, sprite){
+        for(var i = effect_one_count; i > 0; i--){
+            var name_it = 'particle_'+i.toString();
+            graphics_store[name_it] = scene_obj.add.graphics({ fillStyle: { color: 0xff0000 } });
+            graphics_store[name_it].fillCircleShape(sprite_circle);
+            graphics_store[name_it].x = sprite.x
+            graphics_store[name_it].y = sprite.y
+            scene_obj.children.bringToTop(sprite);
+            graphicsEffectOne_pt_Target(sprite, graphics_store[name_it])
+            //Point the object at random point on the outer circle
+            var dx = graphics_store[name_it].target.x - graphics_store[name_it].x;
+            var dy = graphics_store[name_it].target.y - graphics_store[name_it].y;
+            var angle = Math.atan2(dy, dx);
+            graphics_store[name_it].rotation = angle
+            //calculate the distance to the target
+            var hyp = Math.sqrt((dx*dx)+(dy*dy))
+            graphics_store[name_it].x = graphics_store[name_it].x+Math.cos(graphics_store[name_it].rotation)*(outer_circle_radius*Math.random())
+            graphics_store[name_it].y = graphics_store[name_it].y+Math.sin(graphics_store[name_it].rotation)*(outer_circle_radius*Math.random())
+        }
+    }
+    function graphicsEffectOne_pt_Update(sprite, delta){
+        for(var particle in graphics_store){
+            //Point the particle at random point on the outer circle
+            var dx = graphics_store[particle].target.x - graphics_store[particle].x;
+            var dy = graphics_store[particle].target.y - graphics_store[particle].y;
+            var angle = Math.atan2(dy, dx);
+            graphics_store[particle].rotation = angle
+            //calculate the distance to the target
+            var hyp = Math.sqrt((dx*dx)+(dy*dy))
+            //if the hyp is less then 5 pixels pick a new target
+            if (hyp < 5){
+                graphics_store[particle].x = sprite.x;
+                graphics_store[particle].y = sprite.y;
+                graphicsEffectOne_pt_Target(sprite, graphics_store[particle])
+            }else{//move the object in the direction its facing
+                var speed = 5+Math.random()*8
+            graphics_store[particle].x = graphics_store[particle].x+Math.cos(graphics_store[particle].rotation)*delta/speed
+            graphics_store[particle].y = graphics_store[particle].y+Math.sin(graphics_store[particle].rotation)*delta/speed
+            } 
+        }
+    }
+    function graphicsEffectOne_pt_Target(sprite, particle){
+        var random_angle = Math.random()*Math.PI*2;
+        var outer_circle_x = sprite.x + Math.cos(random_angle)*outer_circle_radius;
+        var outer_circle_y = sprite.y + Math.sin(random_angle)*outer_circle_radius;
+        var point = new Point(outer_circle_x, outer_circle_y);
+        particle.target = point;
+    }  
+    //////
+    //EFFECT ONE END
+    //////
+
+    class Point {
+            constructor(x,y){
+                this.x = x;
+                this.y = y;
+            }
+        }
+        class J_Sprite extends Phaser.Physics.Matter.World {
+        constructor(object_scene, name_sprite){
+            super({
+                scene:object_scene
+                });
+            this.scene = object_scene;
+            this.name_it = name_sprite;
+            this.sprite_j = {};
+            this.world = object_scene.matter.world;
+            this.x = game.config.width*0.5;
+            this.y = game.config.height*0.5-100;
+            this.texture='sprites';
+            this.frame= name_sprite.toString()+'.png';
+            this.options={shape: hitboxes[name_sprite]};
+        }
+        addMe(num){
+            for(var i=num; i > 0; i--){
+                    var name_it = this.name_it+'_'+i.toString()
+                    this.sprite_j[name_it] = this.scene.matter.add.sprite(this.x,this.y,this.texture,this.frame,this.options);
+                    this.sprite_j[name_it].name = name_it
+                }            
+            return this.sprite_j;
+            }
+        }
+        class SceneMenue extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneMenue' });
+            }
+            preload (){
+                console.log('menues are loading')
+            }
+            create ()
+            {
+                console.log("menues were loaded")
+                this.scene.start('sceneGameOn');
+            }
+        }
+        
+        var config = {
+        type: Phaser.AUTO,
+        width: 1000,
+        height: 500,
+        parent: 'game',
+        scene: [ SceneMenue, SceneGameOn, SceneGameOver ],
+        physics: {
+            default: "matter",
+            matter: {
+                 debug: false//true
+            }
+        }
+        ,transparent: true
+    };
+    var game = new Phaser.Game(config);
+    var hitboxes = null;
+    var reds, tree;
+</script>
+</body>
+</html>

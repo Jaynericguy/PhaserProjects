@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avoidance</title>
+    <script src="phaser.js"></script> 
+    <script src="Additional_Fun_vLatest.js"></script>
+    
+    <script src="SceneGameMenue.js"></script>
+    <script src="SceneGameOn.js"></script>
+    <script src="SceneGameOver.js"></script>
+</head>
+<body>
+    <script>
+     var config = {
+        type: Phaser.AUTO,
+        width: 1000,
+        height: 500,
+        parent: 'game',
+        scene: [ SceneMenue, SceneGameOn, SceneGameOver ],
+        physics: {
+            default: "matter",
+            matter: {
+                 debug: false//true
+             }
+         }
+         ,transparent: true
+     };
+     var game = new Phaser.Game(config); 
+ </script>
+ <script src="Effect_2_Forest_v1.js"></script>
+ <script src="JSprite_v1.js"></script> 
+
+
+</body>
+</html>
