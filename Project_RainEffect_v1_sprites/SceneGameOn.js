@@ -45,7 +45,7 @@ function handleRain(delta) {
         if(rain[obj].y>extra_travel_distance){
             if(rain[obj].name_of_ripple!=null){
                 //rain[rain[obj].name_of_ripple].y = 300
-                console.log(rain[rain[obj].name_of_ripple])
+                //console.log(rain[rain[obj].name_of_ripple])
             }
             rain[obj].y = 0
         }
