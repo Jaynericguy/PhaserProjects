@@ -7,6 +7,8 @@
 </head>
 <body>
     <script>
+        
+    
      class Point {
         constructor(x,y){
             this.x = x;
@@ -14,19 +16,20 @@
         }
     }
     class J_Sprite extends Phaser.Physics.Matter.World {
-        constructor(object_scene, name_sprite){
+        constructor(object_scene, name_sprite, hitboxes){
             super({
                 scene:object_scene
             });
             this.scene = object_scene;
             this.name_it = name_sprite;
+            this.hitboxes = hitboxes
             this.sprite_j = {};
             this.world = object_scene.matter.world;
             this.x = game.config.width*0.5;
             this.y = game.config.height*0.5-100;
             this.texture='sprites';
             this.frame= name_sprite.toString()+'.png';
-            this.options={shape: hitboxes[name_sprite]};
+            this.options={shape: this.hitboxes[name_sprite]};
         }
         addMe(num){
             for(var i=num; i > 0; i--){
@@ -73,9 +76,9 @@
                 console.log("Keynames: ", keyNames)
                 this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
 
-                blues = new J_Sprite(scene_obj, 'blue').addMe(4);
-                greens = new J_Sprite(scene_obj, 'green').addMe(20);
-                reds = new J_Sprite(scene_obj, 'red').addMe(2);
+                blues = new J_Sprite(scene_obj, 'blue', hitboxes).addMe(4);
+                greens = new J_Sprite(scene_obj, 'green', hitboxes).addMe(20);
+                reds = new J_Sprite(scene_obj, 'red', hitboxes).addMe(2);
                 
                 reds.red_1.x = game.config.width*0.5;
                 reds.red_1.y = game.config.height*0.5;
