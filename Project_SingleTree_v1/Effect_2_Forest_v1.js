@@ -158,7 +158,7 @@ var forest_normal = {
     fadeInterval: 250, // Fade interval in ms
     initialWidth: 10, // Initial branch width
     x: 200+Math.random()*600, 
-    y: game.config.height,      
+    y: 500,      
     new_colour: newRandomColour()
 }
 
