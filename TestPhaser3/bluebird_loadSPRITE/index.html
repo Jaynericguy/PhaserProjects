@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bluebird</title>
+    <script src="../../src/Phaser_v3.19.0.js"></script>
+    <script src="../../assets/bluebird.json"></script>
+    <img src="../../assets/bluebird.png" alt="">
+</head>
+<body>
+    <script>        
+        class SceneBlueBird extends Phaser.Scene {
+            constructor(){
+                super({ key: 'SceneBlueBird' });
+            }
+            preload() {
+                console.log('game preload')
+                this.load.atlas('bluebird', '../../assets/bluebird.png', '../../assets/bluebird.json');
+                //this.load.json('hitboxes', '../assets/avoid_hitboxes.json');
+                    }
+            create() {
+                var scene_bluebird = this;
+                console.log("game create")
+                this.matter.add.sprite(250,250,'bluebird','bluebird/1.png');
+                
+                
+            }
+            update(time, delta){
+                
+            }
+}
+    var game_config = {
+            type: Phaser.AUTO,
+            width: 500,
+            height: 500,
+            parent: 'game',
+            scene: [ SceneBlueBird ],
+            physics: {
+                default: "matter",
+                matter: {
+                   debug: false
+               }
+           }
+        }    
+    var game = new Phaser.Game(game_config); 
+    </script>
+</body>
+</html>
