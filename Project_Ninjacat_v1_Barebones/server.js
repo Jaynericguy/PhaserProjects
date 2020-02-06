@@ -12,11 +12,11 @@ var jevry_92 = {
 // Define configuration options
 const opts = {
   identity: {
-    username: 'jevry_92',
-    password: 'oauth:odg9vr5sjzgzyfy82aukm29uqi7h8h'
+    username: 'ENTER YOUR BOTS USERNAME',
+    password: 'ENTER YOUR OAUTH'
   },
   channels: [
-    'jevry_92'
+    'ENTER CHANELS TO LISTEN TO'
   ]
 };
 // Create a client with our options
