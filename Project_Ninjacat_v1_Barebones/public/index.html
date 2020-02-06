@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>jevry_92 Twitch API chat bot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <script src="phaser-3.22.0.js"></script>
+</head>
+
+<body onload="init()">
+    <script>
+        var ninja_cat, idle
+        
+        function init() {
+            config = {
+                type: Phaser.AUTO, // Which renderer to use
+                width: 1600, // Canvas width in pixels
+                height: 900, // Canvas height in pixels
+                backgroundColor: '#2d2d2d',
+                parent: "game", // ID of the DOM element to add the canvas to
+                scene: {
+                    preload: preload,
+                    create: create,
+                    update: update
+                }
+            };
+            game = new Phaser.Game(config);      
+        }
+        function preload() {
+            //Load the ninja_cat
+            this.load.atlas('ninjacat', 'assets/ninja_cat.png', 'assets/ninja_cat.json');
+        }
+        function create() {
+            ninjacat = this.add.sprite(800, 450, 'ninjacat', 'idle active/ninja-idle active_00')
+            idle_framenames1 = this.anims.generateFrameNames("ninjacat", {
+                end: 9,
+                prefix: "idle active/ninja-idle active_0",
+                zeropad: 1
+            });
+            //Idle frame names start
+            idle_framenames2 = this.anims.generateFrameNames("ninjacat", {
+                start: 10,
+                end: 28,
+                prefix: "idle active/ninja-idle active_",
+                zeropad: 2
+            });
+            idle_framenames = idle_framenames1.concat(idle_framenames2);
+            idle_framenames1 = this.anims.generateFrameNames("ninjacat", {
+                end: 9,
+                prefix: "idle active/ninja-idle active_0",
+                zeropad: 1
+            });
+            //Die frame names start
+            die_framenames1 = this.anims.generateFrameNames("ninjacat", {
+                end: 9,
+                prefix: "die/ninja-die_0",
+                zeropad: 1
+            });
+            die_framenames2 = this.anims.generateFrameNames("ninjacat", {
+                start: 10,
+                end: 28,
+                prefix: "die/ninja-die_",
+                zeropad: 2
+            });
+            die_framenames = die_framenames1.concat(die_framenames2);
+            //Slash frame names start
+            slash_framenames1 = this.anims.generateFrameNames("ninjacat", {
+                end: 9,
+                prefix: "slash/ninja-slash_0",
+                zeropad: 1
+            });
+            slash_framenames2 = this.anims.generateFrameNames("ninjacat", {
+                start: 10,
+                end: 11,
+                prefix: "slash/ninja-slash_",
+                zeropad: 2
+            });
+            slash_framenames = slash_framenames1.concat(slash_framenames2);
+            //Run frame names start
+            run_framenames1 = this.anims.generateFrameNames("ninjacat", {
+                end: 9,
+                prefix: "run/ninja-run_0",
+                zeropad: 1
+            });
+            run_framenames2 = this.anims.generateFrameNames("ninjacat", {
+                start: 10,
+                end: 11,
+                prefix: "run/ninja-run_",
+                zeropad: 2
+            });
+            run_framenames = run_framenames1.concat(run_framenames2);
+            //Pull frame names start
+            pull_framenames1 = this.anims.generateFrameNames("ninjacat", {
+                end: 9,
+                prefix: "pull lever/ninja-pull lever_0",
+                zeropad: 1
+            });
+            pull_framenames2 = this.anims.generateFrameNames("ninjacat", {
+                start: 10,
+                end: 14,
+                prefix: "pull lever/ninja-pull lever_",
+                zeropad: 2
+            });
+            pull_framenames = pull_framenames1.concat(pull_framenames2);
+            this.anims.create({
+                key: 'ninja-idle',
+                frames: idle_framenames,
+                frameRate: 10,
+                repeat: -1
+            });
+            this.anims.create({
+                key: 'ninja-die',
+                frames: die_framenames,
+                frameRate: 10,
+                repeat: 0
+            });
+            this.anims.create({
+                key: 'ninja-run',
+                frames: run_framenames,
+                frameRate: 10,
+                repeat: 5
+            });
+            this.anims.create({
+                key: 'ninja-pull',
+                frames: pull_framenames,
+                frameRate: 10,
+                repeat: 0
+            });
+            this.anims.create({
+                key: 'ninja-slash',
+                frames: slash_framenames,
+                frameRate: 10,
+                repeat: 0
+            });
+            this.cameras.main.startFollow(ninjacat);
+            idle=false;
+            ninjacat.play('ninja-idle')  
+        }
+        function update() {
+        }
+        this.socket = io();
+        // listen for web socket events
+        this.socket.on('playerCmded', function (cmdData) {
+            //this.addOtherPlayers(playerInfo);
+            console.log(cmdData)
+            if(cmdData.toString()=='!ninja-die'){
+                ninjacat.play('ninja-die')
+            }
+            if(cmdData.toString()=='!ninja-slash'){
+                ninjacat.play('ninja-slash')
+            }
+            if(cmdData.toString()=='!nijna-pull'){
+                ninjacat.play('ninja-pull')
+            }
+            if(cmdData.toString()=='!ninja-run'){
+                ninjacat.play('ninja-run')
+            }
+            setTimeout(function(){ ninjacat.play('ninja-idle');}, 5000);
+        }.bind(this));
+    </script>
+</body>
+
+</html>
