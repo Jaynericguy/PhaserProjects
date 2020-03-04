@@ -147,8 +147,8 @@
         // -------------------------------//
 
         // Clear the canvas
-        function clear() {
-            scene.clearRect(0, 0 - config.height / 2, config.width, config.height);
+        function clear(tree_obj) {
+            tree_obj.canvas.ctx.clearRect(0, 0 - HEIGHT / 2, WIDTH, HEIGHT);
         }
 
         /**
