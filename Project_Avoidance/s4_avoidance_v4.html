@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avoidance</title>
+    <script src="phaser.js"></script>
+    <script src="avoid_hitboxes.json"></script>
+    <script src="avoid_sprites.json"></script>
+</head>
+<body>
+    <script>
+       class Player extends Phaser.Physics.Matter.World {
+       //Using "World" not "Sprite"
+       //Ran into problems using Phaser.Physics.Matter.Sprite...
+       //...needed the 'add' method when adding to world and...
+       //...thats only present in Phaser.Physics.Matter.World
+       //Possibly look into writing an add method to "Sprite"...
+       //Using the github "add" method in the "World" class
+        constructor(scene_obj){
+            super({
+                scene:scene_obj
+                });
+            this.scene = scene_obj
+            this.world = scene_obj.matter.world;
+            this.x = game.config.width*0.5;
+            this.y = game.config.height*0.5-100;
+            this.texture='sprites';
+            this.frame='red.png';
+            this.options={shape: scene_obj.hitboxes.red};
+            this.sprite_j = {};
+        }
+        addMe(){
+            this.sprite_j = this.scene.matter.add.sprite(this.x,this.y,this.texture,this.frame,this.options);
+            return this.sprite_j;
+            }
+        }
+        class Ship extends Phaser.Physics.Matter.World {
+       //Using "World" not "Sprite"
+       //Ran into problems using Phaser.Physics.Matter.Sprite...
+       //...needed the 'add' method when adding to world and...
+       //...thats only present in Phaser.Physics.Matter.World
+       //Possibly look into writing an add method to "Sprite"...
+       //Using the github "add" method in the "World" class
+        constructor(scene_obj, id){
+            super({
+                scene:scene_obj
+                });
+            this.name = id
+            this.scene = scene_obj
+            this.world = scene_obj.matter.world;
+            this.x = 200
+            this.y = 200
+            this.texture='sprites';
+            this.frame='blue.png';
+            this.options={shape: scene_obj.hitboxes.blue};
+            this.sprite_j = {};
+        }
+        addMe(){
+            this.sprite_j = this.scene.matter.add.sprite(this.x,this.y,this.texture,this.frame,this.options);
+            return this.sprite_j;
+            }
+        }
+        
+        class SceneMenue extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneMenue' });
+            }
+            preload (){
+                console.log('menues are loading')
+            }
+            create ()
+            {
+                console.log("menues were loaded")
+                this.scene.start('sceneGameOn');
+            }
+        }
+
+        class SceneGameOn extends Phaser.Scene {
+            constructor(){
+            super({ key: 'sceneGameOn' });
+                }
+            preload() {
+                console.log('game is loading')
+                // Load sprite sheet generated with TexturePacker
+                this.load.atlas('sprites', 'avoid_sprites.png', 'avoid_sprites.json');
+                // Load body shapes from JSON file generated using PhysicsEditor
+                this.load.json('hitboxes', 'avoid_hitboxes.json');
+                }
+            create() {
+                console.log("game has loaded")
+                var scene_obj = this
+                this.hitboxes = this.cache.json.get('hitboxes');
+                var keyNames = Object.keys(this.hitboxes);
+                console.log(keyNames)
+                this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
+                player = new Player(scene_obj).addMe();
+                for(var i=5; i > 0; i--){
+                    var name_it = "ship_"+i.toString()
+                    ships[name_it] = new Ship(scene_obj, name_it).addMe()
+                }
+
+                ships.ship_1.x +=100;
+                ships.ship_2.x +=150;
+                ships.ship_3.x +=200;
+                ships.ship_4.x +=250;
+                ships.ship_5.x +=550;
+
+                console.log(ships)
+
+                this.input.once('pointerup', function (event) {
+                    this.input.manager.enabled = true;
+                    this.scene.start('sceneGameOver');
+                        }, this);
+                console.log(player)
+                }
+            update(time, delta){
+                player.x += Math.cos(player.rotation) * delta/8
+                player.y += Math.sin(player.rotation) * delta/8
+                player.rotation+=delta/1000             
+
+                }
+            }
+        class SceneGameOver extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneGameOver' });
+                }
+            preload(){
+                }
+            create(){
+                this.input.once('pointerup', function (event) {
+                    this.input.manager.enabled = true;
+                    this.scene.start('sceneGameOn');
+                    }, this);
+                }
+            }
+        
+        var config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 400,
+            parent: 'game',
+            scene: [ SceneMenue, SceneGameOn, SceneGameOver ],
+            physics: {
+                default: "matter",
+                matter: {
+                     debug: true
+                }
+            }
+        };
+        
+        var game = new Phaser.Game(config);
+        var player = null;
+        var ships = {};
+</script>
+</body>
+</html>

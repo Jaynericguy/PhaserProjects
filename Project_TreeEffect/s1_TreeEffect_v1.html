@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tree Effect</title>
+    <script src="../phaser.js"></script>
+</head>
+
+<body>
+    <script>
+        var tree, scene;
+
+        class Point {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+        class SceneGameOn extends Phaser.Scene {
+            constructor() {
+                super({
+                    key: 'sceneGameOn'
+                });
+            }
+            preload() {
+                console.log('game is loading')
+            }
+            create() {
+                console.log("game has loaded")
+                scene = this;
+                tree = new TreeGenerator()
+                tree.start()
+            }
+            update(time, delta) {}
+        }
+        //////
+        // TREE EFFECT START
+        //////
+        class TreeGenerator {
+            constructor() {
+                this.loss = 0.03; // Width loss per cycle
+                this.minSleep = 10; // Min sleep time (For the animation)
+                this.branchLoss = 0.8; // % width maintained for branches
+                this.mainLoss = 0.8; // % width maintained after branching
+                this.speed = 0.3; // Movement speed
+                this.newBranch = 0.8; // Chance of not starting a new branch
+                this.colourful = false; // Use colours for new trees
+                this.fastMode = true; // Fast growth mode
+                this.fadeOut = true; // Fade slowly to black
+                this.fadeAmount = 0.05; // How much per iteration
+                this.autoSpawn = true; // Automatically create trees
+                this.spawnInterval = 250; // Spawn interval in ms
+                this.fadeInterval = 250; // Fade interval in ms
+                this.initialWidth = 10; // Initial branch width
+                this.indicateNewBranch = false; // Display a visual indicator when a new branch is born
+                this.fitScreen = false; // Resize canvas to fit screen,
+                this.colour = 0xD28181;
+                this.bgColour = [0, 0, 0];
+                // Generation intervals
+                this.intervals = {
+                    generation: null,
+                    fading: null
+                }
+                this.graphics = scene.add.graphics()
+                tree = this;
+            }
+            start() {
+                // Clear intervals
+                tree.stop();
+                // Check autoSpawn
+                if (tree.autoSpawn) {
+                    tree.branch(config.width / 2, config.height, 0, -3, 10, 0, tree.colour);
+                    tree.intervals.generation = setInterval(function () {
+                        tree.branch(
+                            (Math.random() * 4) * config.width / 4,
+                            config.height,
+                            0,
+                            -Math.random() * 3,
+                            10 * Math.random(), 30,
+                            0,
+                            tree.newColour()
+                        );
+                    }, this.spawnInterval);
+                }
+                // Check autoFade
+                if (tree.fadeOut) {
+                    tree.intervals.fading = setInterval(function () {
+                        tree.fade()
+                    }, tree.fadeInterval);
+                }
+            }
+            stop() {
+                clearInterval(tree.intervals.generation);
+                clearInterval(tree.intervals.fading);
+            }
+            branch(x, y, dx, dy, w, growthRate, lifetime, branchcolour) {
+                tree.graphics.lineStyle(w - lifetime * tree.loss, tree
+                    .colour);
+                tree.graphics.beginPath();
+                tree.graphics.moveTo(x, y);
+                if (tree.fastMode) growthRate *= 0.5;
+                // Calculate new coords
+                x = x + dx;
+                y = y + dy;
+                // Change dir
+                dx = dx + Math.sin(Math.random() + lifetime) * tree.speed;
+                dy = dy + Math.cos(Math.random() + lifetime) * tree.speed;
+                // Check if branches are getting too low
+                if (w < 6 && y > config.height - Math.random() * (0.3 * config.height)) w = w * 0.8;
+                // Draw the next segment of the branch
+                tree.graphics.strokeStyle = tree.colour;
+                tree.graphics.lineTo(x, y);
+                tree.graphics.strokePath();
+                // Generate new branches
+                // they should spawn after a certain lifetime has been met, although depending on the width
+                if (lifetime > 5 * w + Math.random() * 100 && Math.random() > tree.newBranch) {
+                    setTimeout(function () {
+                        // Indicate the birth of a new branch
+                        if (tree.indicateNewBranch) {
+                            circle(scene, x, y, w, tree.colour);
+                        }
+                        tree.branch(x, y, 2 * Math.sin(Math.random() + lifetime), 2 * Math.cos(
+                                Math.random() + lifetime), (w - lifetime * tree.loss) *
+                            tree.branchLoss, growthRate + Math.random() * 100, 0,
+                            branchcolour);
+                        // When it branches, it looses a bit of width
+                        w *= tree.mainLoss;
+                    }, 2 * growthRate * Math.random() + tree.minSleep);
+                }
+                // Continue the branch
+                if (w - lifetime * tree.loss >= 1) setTimeout(function () {
+                    tree.branch(x, y, dx, dy, w, growthRate, ++lifetime, branchcolour);
+                }, growthRate);
+            }
+            newColour() {
+            if (!tree.colourful) return tree.colour;
+            return '#' + Math.round(tree.colour * Math.random()).toString(16);
+            }
+            fade() {
+                if (!tree.fadeOut) return true;
+                tree.graphics.alpha -= 0.05
+            }
+        }
+        // -------------------------------//
+        //       Internal functions       //
+        // -------------------------------//
+
+        // Clear the canvas
+        function clear() {
+            scene.clearRect(0, 0 - config.height / 2, config.width, config.height);
+        }
+
+        /**
+         * Draw a circle
+         * @param  {int}    x     Center x coordinate
+         * @param  {int}    y     Center y coordinate
+         * @param  {int}    rad   Radius
+         * @param  {String} colour HTML colour
+         * @return {void}
+         */
+        function circle(scene_obj, x, y, rad, colour) {
+            // Circulo
+            tree.graphics.lineWidth = 1;
+            tree.graphics.strokeStyle = colour;
+            tree.graphics.beginPath();
+            tree.graphics.arc(x, y, rad, 0, Math.PI * 2, true);
+            tree.graphics.closePath();
+            tree.graphics.strokePath();
+        }
+
+        //////
+        // TREE-EFFECT END
+        //////
+        var config = {
+            type: Phaser.AUTO,
+            width: 500,
+            height: 500,
+            parent: 'game',
+            scene: [SceneGameOn],
+            physics: {
+                default: "matter",
+                matter: {
+                    debug: false //true
+                }
+            },
+            transparent: true
+        };
+        var game = new Phaser.Game(config);
+    </script>
+</body>
+
+</html>

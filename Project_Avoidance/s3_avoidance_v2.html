@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Avoidance</title>
+    <script src="phaser.js"></script>
+    <script src="avoid_hitboxes.json"></script>
+    <script src="avoid_sprites.json"></script>
+</head>
+<body>
+    <script>
+       class Player extends Phaser.Physics.Matter.Sprite {
+        constructor(scene_obj){
+            super({
+                scene:scene_obj,
+                world:scene_obj.matter.world,
+                x:game.config.width*0.5,
+                y:game.config.height*0.5,
+                texture:'sprites',
+                frame:'red.png',
+                options:{shape: scene_obj.hitboxes.red}
+                });
+            
+            scene_obj.matter.add.sprite(this);
+            }
+            add(){
+                //need to figure how to add this sprite to the world
+
+            }
+        }
+        
+        class SceneMenue extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneMenue' });
+            }
+            preload (){
+                console.log('menues are loading')
+            }
+            create ()
+            {
+                console.log("menues were loaded")
+                this.scene.start('sceneGameOn');
+            }
+        }
+
+        class SceneGameOn extends Phaser.Scene {
+            constructor(){
+            super({ key: 'sceneGameOn' });
+                }
+            preload() {
+                console.log('game is loading')
+                // Load sprite sheet generated with TexturePacker
+                this.load.atlas('sprites', 'avoid_sprites.png', 'avoid_sprites.json');
+                // Load body shapes from JSON file generated using PhysicsEditor
+                this.load.json('hitboxes', 'avoid_hitboxes.json');
+                }
+            create() {
+                console.log("game has loaded")
+                var scene_obj = this
+                this.hitboxes = this.cache.json.get('hitboxes');
+                var keyNames = Object.keys(this.hitboxes);
+                console.log(keyNames)
+                this.matter.world.setBounds(0, 0, game.config.width, game.config.height);
+                var player = new Player(scene_obj);
+                //this.matter.add.sprite(player.x,player.y);
+                }
+            update(){
+                }
+
+            }
+        class SceneGameOver extends Phaser.Scene {
+            constructor(){
+                super({ key: 'sceneGameOver' });
+                }
+            preload(){
+                }
+            create(){
+                this.input.once('pointerup', function (event) {
+                    this.input.manager.enabled = false;
+                    this.scene.start('sceneA');
+                    }, this);
+                }
+            }
+        
+        var config = {
+            type: Phaser.AUTO,
+            width: 1200,
+            height: 400,
+            parent: 'game',
+            scene: [ SceneMenue, SceneGameOn, SceneGameOver ],
+            physics: {
+                default: "matter",
+                matter: {
+                     debug: true
+                }
+            }
+        };
+        
+        var game = new Phaser.Game(config);
+</script>
+</body>
+</html>
