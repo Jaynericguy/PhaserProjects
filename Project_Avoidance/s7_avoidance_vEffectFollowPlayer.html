@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Avoidance</title>
-    <script src="../src/phaser_v3.19.0.js"></script>
+    <script src="../phaser.js"></script>
 </head>
 <body>
     <script>
@@ -63,9 +63,9 @@
         preload() {
             console.log('game is loading')
             // Load sprite sheet generated with TexturePacker
-            this.load.atlas('sprites', '../assets/avoid_sprites.png', '../assets/avoid_sprites.json');
+            this.load.atlas('sprites', 'assets/avoid_sprites.png', 'assets/avoid_sprites.json');
             // Load body shapes from JSON file generated using PhysicsEditor
-            this.load.json('hitboxes', '../assets/avoid_hitboxes.json');
+            this.load.json('hitboxes', 'assets/avoid_hitboxes.json');
             }
             create() {
                 console.log("game has loaded")
