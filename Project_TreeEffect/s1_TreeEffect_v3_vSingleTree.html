@@ -54,18 +54,18 @@
                 this.stop();
                 // Check autoSpawn
                 if (this.tree_class.tree_config.autoSpawn) {
-                    this.tree_class.branch(config.width / 2, config.height, 0, -3, 10, 0, 1);
-                    this.tree_class.tree_config.intervals.generation = setInterval(function (tree_class) {
-                        tree_class.branch(
-                            (Math.random() * 4) * config.width / 4,
-                            config.height,
-                            0,
-                            -Math.random() * 3,
-                            10 * Math.random(), 30,
-                            0,
-                            1
-                        );
-                    }, this.spawnInterval, this.tree_class);
+                    this.tree_class.branch(config.width*0.5, config.height, 0, -3, 10, 0, 1);
+                    // this.tree_class.tree_config.intervals.generation = setInterval(function (tree_class) {
+                    //     tree_class.branch(
+                    //         (Math.random() * 4) * config.width / 4,
+                    //         config.height,
+                    //         0,
+                    //         -Math.random() * 3,
+                    //         10 * Math.random(), 30,
+                    //         0,
+                    //         1
+                    //     );
+                    // }, this.spawnInterval, this.tree_class);
                 }
                 // Check autoFade
                 if (this.tree_class.tree_config.fadeOut) {
