@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tree Effect</title>
+    <script src="../phaser.js"></script>
+</head>
+
+<body>
+    <script>
+        var tree_1, tree_2, scene;
+
+        class Point {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+        class SceneGameOn extends Phaser.Scene {
+            constructor() {
+                super({
+                    key: 'sceneGameOn'
+                });
+            }
+            preload() {
+                console.log('game is loading')
+            }
+            create() {
+                console.log("game has loaded")
+                scene = this;
+                tree_1 = new TreeGenerator(tree_config_1)
+                tree_2 = new TreeGenerator(tree_config_2)
+                tree_1.start()
+                tree_2.start()
+            }
+            update(time, delta) {}
+        }
+        //////
+        // TREE EFFECT START
+        //////
+        class TreeGenerator {
+            constructor(tree_config) {
+                this.tree_config = tree_config;
+                if (scene !== null || undefined) {
+                    this.tree_config.graphics = scene.add.graphics()
+                } else {
+                    this.tree_config.graphics = {};
+                }
+                this.tree_class = this;
+            }
+            start() {
+                // Clear intervals
+                this.stop();
+                // Check autoSpawn
+                if (this.tree_class.tree_config.autoSpawn) {
+                    this.tree_class.branch(config.width*0.5, config.height, 0, -3, 10, 0, 1);
+                    // this.tree_class.tree_config.intervals.generation = setInterval(function (tree_class) {
+                    //     tree_class.branch(
+                    //         (Math.random() * 4) * config.width / 4,
+                    //         config.height,
+                    //         0,
+                    //         -Math.random() * 3,
+                    //         10 * Math.random(), 30,
+                    //         0,
+                    //         1
+                    //     );
+                    // }, this.spawnInterval, this.tree_class);
+                }
+                // Check autoFade
+                if (this.tree_class.tree_config.fadeOut) {
+                    this.tree_class.tree_config.intervals.fading = setInterval(function () {
+                        this.tree_class.fade()
+                    }, this.tree_class.tree_config.fadeInterval);
+                }
+            }
+            stop() {
+                clearInterval(this.tree_class.tree_config.intervals.generation);
+                clearInterval(this.tree_class.tree_config.intervals.fading);
+            }
+            branch(x, y, dx, dy, w, growthRate, lifetime) {
+                this.tree_class.tree_config.graphics.lineStyle(w - lifetime * this.tree_class.tree_config.loss, this
+                    .tree_class.tree_config.colour);
+                this.tree_class.tree_config.graphics.beginPath();
+                this.tree_class.tree_config.graphics.moveTo(x, y);
+                if (this.tree_class.tree_config.fastMode) growthRate *= 0.5;
+                // Calculate new coords
+                x = x + dx;
+                y = y + dy;
+                // Change dir
+                dx = dx + Math.sin(Math.random() + lifetime) * this.tree_class.tree_config.speed;
+                dy = dy + Math.cos(Math.random() + lifetime) * this.tree_class.tree_config.speed;
+                // Check if branches are getting too low
+                if (w < 6 && y > config.height - Math.random() * (0.3 * config.height)) w = w * 0.8;
+                // Draw the next segment of the branch
+                this.tree_class.tree_config.graphics.strokeStyle = this.tree_class.tree_config.colour;
+                this.tree_class.tree_config.graphics.lineTo(x, y);
+                this.tree_class.tree_config.graphics.strokePath();
+                // Generate new branches
+                // they should spawn after a certain lifetime has been met, although depending on the width
+                if (lifetime > 5 * w + Math.random() * 100 && Math.random() > this.tree_class.tree_config
+                    .newBranch) {
+                    setTimeout(function (tree_class) {
+                            // Indicate the birth of a new branch
+                            if (tree_class.tree_config.indicateNewBranch) {
+                                circle(scene, x, y, w, tree_class.tree_config.colour);
+                            }
+                            tree_class.branch(x, y, 2 * Math.sin(Math.random() + lifetime), 2 * Math.cos(
+                                    Math.random() + lifetime), (w - lifetime * tree_class.tree_config
+                                .loss) *
+                                tree_class.tree_config.branchLoss, growthRate + Math.random() * 100, 0, 1);
+                            // When it branches, it looses a bit of width
+                            w *= tree_class.tree_config.mainLoss;
+                        }, 2 * growthRate * Math.random() + this.tree_class.tree_config.minSleep, this
+                        .tree_class);
+                }
+                // Continue the branch
+                if (w - lifetime * this.tree_class.tree_config.loss >= 1) setTimeout(function (tree_class) {
+                    tree_class.branch(x, y, dx, dy, w, growthRate, ++lifetime);
+                }, growthRate, this.tree_class);
+            }
+            newColour() {
+                if (!tree_config.colourful) return tree_config.colour;
+                return '#' + Math.round(tree_config.colour * Math.random()).toString(16);
+            }
+            fade() {
+                if (!tree_config.fadeOut) return true;
+                tree_config.graphics.alpha -= 0.05
+            }
+        }
+        // -------------------------------//
+        //       Internal functions       //
+        // -------------------------------//
+
+        // Clear the canvas
+        function clear(tree_obj) {
+            tree_obj.canvas.ctx.clearRect(0, 0 - HEIGHT / 2, WIDTH, HEIGHT);
+        }
+
+        /**
+         * Draw a circle
+         * @param  {int}    x     Center x coordinate
+         * @param  {int}    y     Center y coordinate
+         * @param  {int}    rad   Radius
+         * @param  {String} colour HTML colour
+         * @return {void}
+         */
+        function circle(scene_obj, x, y, rad, colour) {
+            // Circulo
+            tree_config.graphics.lineWidth = 1;
+            tree_config.graphics.strokeStyle = colour;
+            tree_config.graphics.beginPath();
+            tree_config.graphics.arc(x, y, rad, 0, Math.PI * 2, true);
+            tree_config.graphics.closePath();
+            tree_config.graphics.strokePath();
+        }
+
+        //////
+        // TREE-EFFECT END
+        //////
+        var tree_config_1 = {
+            loss: 0.03, // Width loss per cycle
+            minSleep: 10, // Min sleep time (For the animation)
+            branchLoss: 0.8, // % width maintained for branches
+            mainLoss: 0.8, // % width maintained after branching
+            speed: 0.3, // Movement speed
+            newBranch: 0.8, // Chance of not starting a new branch
+            colourful: false, // Use colours for new trees
+            fastMode: true, // Fast growth mode
+            fadeOut: false, // Fade slowly to black
+            fadeAmount: 0.05, // How much per iteration
+            autoSpawn: true, // Automatically create trees
+            spawnInterval: 250, // Spawn interval in ms
+            fadeInterval: 250, // Fade interval in ms
+            initialWidth: 10, // Initial branch width
+            indicateNewBranch: false, // Display a visual indicator when a new branch is born
+            fitScreen: false, // Resize canvas to fit screen,
+            colour: 0xD28181,
+            intervals: {
+                generation: null,
+                fading: null
+            }
+        }
+
+        var tree_config_2 = {
+            loss: 0.03, // Width loss per cycle
+            minSleep: 10, // Min sleep time (For the animation)
+            branchLoss: 0.8, // % width maintained for branches
+            mainLoss: 0.8, // % width maintained after branching
+            speed: 0.3, // Movement speed
+            newBranch: 0.8, // Chance of not starting a new branch
+            colourful: false, // Use colours for new trees
+            fastMode: true, // Fast growth mode
+            fadeOut: false, // Fade slowly to black
+            fadeAmount: 0.05, // How much per iteration
+            autoSpawn: true, // Automatically create trees
+            spawnInterval: 250, // Spawn interval in ms
+            fadeInterval: 250, // Fade interval in ms
+            initialWidth: 10, // Initial branch width
+            indicateNewBranch: false, // Display a visual indicator when a new branch is born
+            fitScreen: false, // Resize canvas to fit screen,
+            colour: 0x000000,
+            intervals: {
+                generation: null,
+                fading: null
+            }
+        }
+
+        var config = {
+            type: Phaser.AUTO,
+            width: 1000,
+            height: 1000,
+            parent: 'game',
+            scene: [SceneGameOn],
+            physics: {
+                default: "matter",
+                matter: {
+                    debug: false //true
+                }
+            },
+            transparent: true
+        };
+        var game = new Phaser.Game(config);
+    </script>
+</body>
+
+</html>
