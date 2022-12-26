@@ -1,7 +1,3 @@
-### TREE EFFECT WAS NOT MADE BY ME DISCLAIMER,,, COPY PASTED CODE FROM::: (((SOURCE MISSING - PARTAILLY REFACTORED)))
-### RAIN EFFECT WAS NOT MADE BY ME DISCLAIMER,,, COPY PASTED CODE FROM::: (((SOURCE MISSING - PARTAILLY REFACTORED)))
-
-
 # NEW
 
 Currently working in vs code with live server extension, reworking and refactoring code.
