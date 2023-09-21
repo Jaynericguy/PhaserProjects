@@ -8,5 +8,5 @@ N.B.
 Development has been done using Brackets editor.
 
 SO... For brackets run the whole 'PhaserProjects' folder as the brackets project folder so that 
-the 'live preview' node server can access everything. 
+the 'live preview' node server can access everything. (127.0.0.1)  
 Otherwise the assets gets cors errors if ran from a sub directory.
