@@ -1,4 +1,4 @@
-Simply run any in project rain and tree effect by opening the html in a browser  
+Simply run any in project rain and tree effect by opening the html in a browser...    
 Project avoidance gives cors errors if not running on live server.   
 # NEW  
   
